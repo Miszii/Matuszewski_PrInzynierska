@@ -37,6 +37,9 @@ function Dashboard() {
     }
 
     loadProgress();
+
+    window.addEventListener("storage", loadProgress);
+    return () => window.removeEventListener("storage", loadProgress);
   }, []);
 
   function resetProgressBars() {

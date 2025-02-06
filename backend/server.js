@@ -202,27 +202,93 @@ app.get("/settings", authenticate, (req, res) => {
 });
 
 app.post("/settings", authenticate, (req, res) => {
-  const query = `
-    INSERT OR REPLACE INTO settings 
-    (user_id, height, weight, age, gender, dailyCaloriesGoal, dailyProteinGoal, plan)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const params = [
-    req.user.id,
-    req.body.height,
-    req.body.weight,
-    req.body.age,
-    req.body.gender,
-    req.body.dailyCaloriesGoal,
-    req.body.dailyProteinGoal,
-    req.body.plan,
-  ];
-  db.run(query, params, function (err) {
-    if (err) {
-      return res.status(500).json({ error: "Błąd zapisu ustawień." });
+  const {
+    height,
+    weight,
+    age,
+    gender,
+    dailyCaloriesGoal,
+    dailyProteinGoal,
+    plan,
+  } = req.body;
+
+  db.get(
+    "SELECT * FROM settings WHERE user_id = ?",
+    [req.user.id],
+    (err, row) => {
+      if (err)
+        return res.status(500).json({ error: "Błąd pobierania ustawień." });
+
+      if (row) {
+        db.run(
+          `UPDATE settings 
+         SET height = ?, weight = ?, age = ?, gender = ?, dailyCaloriesGoal = ?, dailyProteinGoal = ?, plan = ? 
+         WHERE user_id = ?`,
+          [
+            height,
+            weight,
+            age,
+            gender,
+            dailyCaloriesGoal,
+            dailyProteinGoal,
+            plan,
+            req.user.id,
+          ],
+          (updateErr) => {
+            if (updateErr)
+              return res
+                .status(500)
+                .json({ error: "Błąd aktualizacji ustawień." });
+            res.status(200).json({
+              message: "Ustawienia zaktualizowane.",
+              settings: {
+                height,
+                weight,
+                age,
+                gender,
+                dailyCaloriesGoal,
+                dailyProteinGoal,
+                plan,
+              },
+            });
+          }
+        );
+      } else {
+        db.run(
+          `INSERT INTO settings (user_id, height, weight, age, gender, dailyCaloriesGoal, dailyProteinGoal, plan)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            req.user.id,
+            height,
+            weight,
+            age,
+            gender,
+            dailyCaloriesGoal,
+            dailyProteinGoal,
+            plan,
+          ],
+          (insertErr) => {
+            if (insertErr)
+              return res
+                .status(500)
+                .json({ error: "Błąd dodawania ustawień." });
+            res.status(201).json({
+              message: "Ustawienia dodane.",
+              settings: {
+                height,
+                weight,
+                age,
+                gender,
+                dailyCaloriesGoal,
+                dailyProteinGoal,
+                plan,
+              },
+            });
+          }
+        );
+      }
     }
-    res.status(200).json({ message: "Ustawienia zapisane." });
-  });
+  );
 });
 
 app.get("/users", authenticate, (req, res) => {

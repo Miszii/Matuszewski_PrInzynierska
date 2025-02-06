@@ -48,6 +48,12 @@ function Settings() {
       try {
         await api.post("/settings", settings);
         alert("Ustawienia zostały zapisane.");
+
+        const resSettings = await api.get("/settings");
+        if (resSettings.data) {
+          setSettings((prev) => ({ ...prev, ...resSettings.data }));
+        }
+
         window.dispatchEvent(new Event("storage"));
       } catch {
         alert("Błąd podczas zapisywania ustawień.");
@@ -77,8 +83,8 @@ function Settings() {
 
     const planGoals = {
       "weight-loss": { calories: TDEE * 0.85, protein: weight },
-      "weight-maintenance": { calories: TDEE, protein: weight * 0.8 },
-      "muscle-gain": { calories: TDEE + 500, protein: weight },
+      "weight-maintenance": { calories: TDEE, protein: weight },
+      "muscle-gain": { calories: TDEE + 500, protein: weight * 1.6 },
       recomposition: { calories: TDEE - 200, protein: weight * 1.6 },
     };
 
